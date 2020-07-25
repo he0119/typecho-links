@@ -113,9 +113,14 @@ class Links_Plugin implements Typecho_Plugin_Interface
 		} catch (Typecho_Db_Exception $e) {
 			$code = $e->getCode();
 			if(('Mysql' == $type && 1050 == $code) ||
-					('SQLite' == $type && ('HY000' == $code || 1 == $code))) {
+					('SQLite' == $type && ('HY000' == $code || 1 == $code)) ||
+						('Pgsql' == $type && '42P07' == $code)) {
 				try {
-					$script = 'SELECT `lid`, `name`, `url`, `sort`, `image`, `description`, `user`, `order` from `' . $prefix . 'links`';
+					if('Pgsql' == $type) {
+						$script = 'SELECT "lid", "name", "url", "sort", "image", "description", "user", "order" from "' . $prefix . 'links"';
+					}else {
+						$script = 'SELECT `lid`, `name`, `url`, `sort`, `image`, `description`, `user`, `order` from `' . $prefix . 'links`';
+					}
 					$installDb->query($script, Typecho_Db::READ);
 					return '检测到友情链接数据表，友情链接插件启用成功';					
 				} catch (Typecho_Db_Exception $e) {

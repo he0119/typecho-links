@@ -1,4 +1,14 @@
 <?php
+namespace TypechoPlugin\Links;
+
+use Typecho\Common;
+use Typecho\Db;
+use Widget\Options;
+
+if (!defined('__TYPECHO_ROOT_DIR__')) {
+    exit;
+}
+
 include 'header.php';
 include 'menu.php';
 ?>
@@ -19,7 +29,7 @@ include 'menu.php';
                 <div class="col-mb-12 col-tb-8" role="main">                  
                     <?php
 						$prefix = $db->getPrefix();
-						$links = $db->fetchAll($db->select()->from($prefix.'links')->order($prefix.'links.order', Typecho_Db::SORT_ASC));
+						$links = $db->fetchAll($db->select()->from($prefix.'links')->order($prefix.'links.order', Db::SORT_ASC));
                     ?>
                     <form method="post" name="manage_categories" class="operate-form">
                     <div class="typecho-list-operate clearfix">
@@ -64,8 +74,8 @@ include 'menu.php';
 										if ($link['image']) {
 											echo '<a href="'.$link['image'].'" title="点击放大" target="_blank"><img class="avatar" src="'.$link['image'].'" alt="'.$link['name'].'" width="32" height="32"/></a>';
 										} else {
-											$options = Typecho_Widget::widget('Widget_Options');
-											$nopic_url = Typecho_Common::url('/usr/plugins/Links/nopic.jpg', $options->siteUrl);
+											$options = Options::alloc();
+											$nopic_url = Common::url('/usr/plugins/Links/nopic.jpg', $options->siteUrl);
 											echo '<img class="avatar" src="'.$nopic_url.'" alt="NOPIC" width="32" height="32"/>';
 										}
 									?></td>
@@ -82,7 +92,7 @@ include 'menu.php';
                     </form>
 				</div>
                 <div class="col-mb-12 col-tb-4" role="form">
-                    <?php Links_Plugin::form()->render(); ?>
+                    <?php Plugin::form()->render(); ?>
                 </div>
         </div>
     </div>

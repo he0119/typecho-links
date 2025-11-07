@@ -13,12 +13,12 @@ use Widget\Base\Contents;
 use Widget\Options;
 
 if (!defined('__TYPECHO_ROOT_DIR__')) {
-	exit;
+    exit;
 }
 
 /**
  * 友情链接插件
- * 
+ *
  * @package Links
  * @author Hanny
  * @version 1.1.1
@@ -29,7 +29,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) {
  * version 1.2.0 at 2025-11-06
  * 适配 Typecho 1.2.0
  * 使用命名空间和新的类名
- * 
+ *
  * version 1.1.1 at 2014-12-14
  * 修改支持Typecho 1.0
  * 修正Typecho 1.0下不能删除的BUG
@@ -63,308 +63,308 @@ if (!defined('__TYPECHO_ROOT_DIR__')) {
  */
 class Plugin implements PluginInterface
 {
-	/**
-	 * 激活插件方法,如果激活失败,直接抛出异常
-	 * 
-	 * @access public
-	 * @return string
-	 * @throws Exception
-	 */
-	public static function activate()
-	{
-		$info = self::linksInstall();
+    /**
+     * 激活插件方法,如果激活失败,直接抛出异常
+     *
+     * @access public
+     * @return string
+     * @throws Exception
+     */
+    public static function activate()
+    {
+        $info = self::linksInstall();
 
-		Helper::addPanel(3, 'Links/manage-links.php', '友情链接', '管理友情链接', 'administrator');
-		Helper::addAction('links-edit', 'Links_Action');
+        Helper::addPanel(3, 'Links/manage-links.php', '友情链接', '管理友情链接', 'administrator');
+        Helper::addAction('links-edit', 'Links_Action');
 
-		Contents::pluginHandle()->contentEx = __CLASS__ . '::parse';
-		Contents::pluginHandle()->excerptEx = __CLASS__ . '::parse';
-		Comments::pluginHandle()->contentEx = __CLASS__ . '::parse';
-		return _t($info);
-	}
+        Contents::pluginHandle()->contentEx = __CLASS__ . '::parse';
+        Contents::pluginHandle()->excerptEx = __CLASS__ . '::parse';
+        Comments::pluginHandle()->contentEx = __CLASS__ . '::parse';
+        return _t($info);
+    }
 
-	/**
-	 * 禁用插件方法,如果禁用失败,直接抛出异常
-	 * 
-	 * @static
-	 * @access public
-	 * @return void
-	 * @throws Exception
-	 */
-	public static function deactivate()
-	{
-		Helper::removeAction('links-edit');
-		Helper::removePanel(3, 'Links/manage-links.php');
-	}
+    /**
+     * 禁用插件方法,如果禁用失败,直接抛出异常
+     *
+     * @static
+     * @access public
+     * @return void
+     * @throws Exception
+     */
+    public static function deactivate()
+    {
+        Helper::removeAction('links-edit');
+        Helper::removePanel(3, 'Links/manage-links.php');
+    }
 
-	/**
-	 * 获取插件配置面板
-	 * 
-	 * @access public
-	 * @param Form $form 配置面板
-	 * @return void
-	 */
-	public static function config(Form $form)
-	{
-	}
+    /**
+     * 获取插件配置面板
+     *
+     * @access public
+     * @param Form $form 配置面板
+     * @return void
+     */
+    public static function config(Form $form)
+    {
+    }
 
-	/**
-	 * 个人用户的配置面板
-	 * 
-	 * @access public
-	 * @param Form $form
-	 * @return void
-	 */
-	public static function personalConfig(Form $form)
-	{
-	}
+    /**
+     * 个人用户的配置面板
+     *
+     * @access public
+     * @param Form $form
+     * @return void
+     */
+    public static function personalConfig(Form $form)
+    {
+    }
 
-	public static function linksInstall()
-	{
-		$installDb = Db::get();
-		$type = explode('_', $installDb->getAdapterName());
-		$type = array_pop($type);
-		$prefix = $installDb->getPrefix();
-		$scripts = file_get_contents('usr/plugins/Links/' . $type . '.sql');
-		$scripts = str_replace('typecho_', $prefix, $scripts);
-		$scripts = str_replace('%charset%', 'utf8', $scripts);
-		$scripts = explode(';', $scripts);
-		try {
-			foreach ($scripts as $script) {
-				$script = trim($script);
-				if ($script) {
-					$installDb->query($script, Db::WRITE);
-				}
-			}
-			return '建立友情链接数据表，插件启用成功';
-		} catch (Db\Exception $e) {
-			$code = $e->getCode();
-			if (
-				('Mysql' == $type && 1050 == $code) ||
-				('SQLite' == $type && ('HY000' == $code || 1 == $code)) ||
-				('Pgsql' == $type && '42P07' == $code)
-			) {
-				try {
-					if ('Pgsql' == $type) {
-						$script = 'SELECT "lid", "name", "url", "sort", "image", "description", "user", "order" from "' . $prefix . 'links"';
-					} else {
-						$script = 'SELECT `lid`, `name`, `url`, `sort`, `image`, `description`, `user`, `order` from `' . $prefix . 'links`';
-					}
-					$installDb->query($script, Db::READ);
-					return '检测到友情链接数据表，友情链接插件启用成功';
-				} catch (Db\Exception $e) {
-					$code = $e->getCode();
-					if (
-						('Mysql' == $type && 1054 == $code) ||
-						('SQLite' == $type && ('HY000' == $code || 1 == $code))
-					) {
-						return self::linksUpdate($installDb, $type, $prefix);
-					}
-					throw new Exception('数据表检测失败，友情链接插件启用失败。错误号：' . $code);
-				}
-			} else {
-				throw new Exception('数据表建立失败，友情链接插件启用失败。错误号：' . $code);
-			}
-		}
-	}
+    public static function linksInstall()
+    {
+        $installDb = Db::get();
+        $type = explode('_', $installDb->getAdapterName());
+        $type = array_pop($type);
+        $prefix = $installDb->getPrefix();
+        $scripts = file_get_contents('usr/plugins/Links/' . $type . '.sql');
+        $scripts = str_replace('typecho_', $prefix, $scripts);
+        $scripts = str_replace('%charset%', 'utf8', $scripts);
+        $scripts = explode(';', $scripts);
+        try {
+            foreach ($scripts as $script) {
+                $script = trim($script);
+                if ($script) {
+                    $installDb->query($script, Db::WRITE);
+                }
+            }
+            return '建立友情链接数据表，插件启用成功';
+        } catch (Db\Exception $e) {
+            $code = $e->getCode();
+            if (
+                ('Mysql' == $type && 1050 == $code) ||
+                ('SQLite' == $type && ('HY000' == $code || 1 == $code)) ||
+                ('Pgsql' == $type && '42P07' == $code)
+            ) {
+                try {
+                    if ('Pgsql' == $type) {
+                        $script = 'SELECT "lid", "name", "url", "sort", "image", "description", "user", "order" from "' . $prefix . 'links"';
+                    } else {
+                        $script = 'SELECT `lid`, `name`, `url`, `sort`, `image`, `description`, `user`, `order` from `' . $prefix . 'links`';
+                    }
+                    $installDb->query($script, Db::READ);
+                    return '检测到友情链接数据表，友情链接插件启用成功';
+                } catch (Db\Exception $e) {
+                    $code = $e->getCode();
+                    if (
+                        ('Mysql' == $type && 1054 == $code) ||
+                        ('SQLite' == $type && ('HY000' == $code || 1 == $code))
+                    ) {
+                        return self::linksUpdate($installDb, $type, $prefix);
+                    }
+                    throw new Exception('数据表检测失败，友情链接插件启用失败。错误号：' . $code);
+                }
+            } else {
+                throw new Exception('数据表建立失败，友情链接插件启用失败。错误号：' . $code);
+            }
+        }
+    }
 
-	public static function linksUpdate($installDb, $type, $prefix)
-	{
-		$scripts = file_get_contents('usr/plugins/Links/Update_' . $type . '.sql');
-		$scripts = str_replace('typecho_', $prefix, $scripts);
-		$scripts = str_replace('%charset%', 'utf8', $scripts);
-		$scripts = explode(';', $scripts);
-		try {
-			foreach ($scripts as $script) {
-				$script = trim($script);
-				if ($script) {
-					$installDb->query($script, Db::WRITE);
-				}
-			}
-			return '检测到旧版本友情链接数据表，升级成功';
-		} catch (Db\Exception $e) {
-			$code = $e->getCode();
-			if (('Mysql' == $type && 1060 == $code)) {
-				return '友情链接数据表已经存在，插件启用成功';
-			}
-			throw new Exception('友情链接插件启用失败。错误号：' . $code);
-		}
-	}
+    public static function linksUpdate($installDb, $type, $prefix)
+    {
+        $scripts = file_get_contents('usr/plugins/Links/Update_' . $type . '.sql');
+        $scripts = str_replace('typecho_', $prefix, $scripts);
+        $scripts = str_replace('%charset%', 'utf8', $scripts);
+        $scripts = explode(';', $scripts);
+        try {
+            foreach ($scripts as $script) {
+                $script = trim($script);
+                if ($script) {
+                    $installDb->query($script, Db::WRITE);
+                }
+            }
+            return '检测到旧版本友情链接数据表，升级成功';
+        } catch (Db\Exception $e) {
+            $code = $e->getCode();
+            if (('Mysql' == $type && 1060 == $code)) {
+                return '友情链接数据表已经存在，插件启用成功';
+            }
+            throw new Exception('友情链接插件启用失败。错误号：' . $code);
+        }
+    }
 
-	public static function form($action = NULL)
-	{
-		/** 构建表格 */
-		$options = Options::alloc();
-		$form = new Form(
-			Common::url('/action/links-edit', $options->index),
-			Form::POST_METHOD
-		);
+    public static function form($action = NULL)
+    {
+        /** 构建表格 */
+        $options = Options::alloc();
+        $form = new Form(
+            Common::url('/action/links-edit', $options->index),
+            Form::POST_METHOD
+        );
 
-		/** 链接名称 */
-		$name = new Form\Element\Text('name', NULL, NULL, _t('链接名称*'));
-		$form->addInput($name);
+        /** 链接名称 */
+        $name = new Form\Element\Text('name', NULL, NULL, _t('链接名称*'));
+        $form->addInput($name);
 
-		/** 链接地址 */
-		$url = new Form\Element\Text('url', NULL, "http://", _t('链接地址*'));
-		$form->addInput($url);
+        /** 链接地址 */
+        $url = new Form\Element\Text('url', NULL, "http://", _t('链接地址*'));
+        $form->addInput($url);
 
-		/** 链接分类 */
-		$sort = new Form\Element\Text('sort', NULL, NULL, _t('链接分类'), _t('建议以英文字母开头，只包含字母与数字'));
-		$form->addInput($sort);
+        /** 链接分类 */
+        $sort = new Form\Element\Text('sort', NULL, NULL, _t('链接分类'), _t('建议以英文字母开头，只包含字母与数字'));
+        $form->addInput($sort);
 
-		/** 链接图片 */
-		$image = new Form\Element\Text('image', NULL, NULL, _t('链接图片'), _t('需要以http://开头，留空表示没有链接图片'));
-		$form->addInput($image);
+        /** 链接图片 */
+        $image = new Form\Element\Text('image', NULL, NULL, _t('链接图片'), _t('需要以http://开头，留空表示没有链接图片'));
+        $form->addInput($image);
 
-		/** 链接描述 */
-		$description = new Form\Element\Textarea('description', NULL, NULL, _t('链接描述'));
-		$form->addInput($description);
+        /** 链接描述 */
+        $description = new Form\Element\Textarea('description', NULL, NULL, _t('链接描述'));
+        $form->addInput($description);
 
-		/** 自定义数据 */
-		$user = new Form\Element\Text('user', NULL, NULL, _t('自定义数据'), _t('该项用于用户自定义数据扩展'));
-		$form->addInput($user);
+        /** 自定义数据 */
+        $user = new Form\Element\Text('user', NULL, NULL, _t('自定义数据'), _t('该项用于用户自定义数据扩展'));
+        $form->addInput($user);
 
-		/** 链接动作 */
-		$do = new Form\Element\Hidden('do');
-		$form->addInput($do);
+        /** 链接动作 */
+        $do = new Form\Element\Hidden('do');
+        $form->addInput($do);
 
-		/** 链接主键 */
-		$lid = new Form\Element\Hidden('lid');
-		$form->addInput($lid);
+        /** 链接主键 */
+        $lid = new Form\Element\Hidden('lid');
+        $form->addInput($lid);
 
-		/** 提交按钮 */
-		$submit = new Form\Element\Submit();
-		$submit->input->setAttribute('class', 'btn primary');
-		$form->addItem($submit);
-		$request = Request::getInstance();
+        /** 提交按钮 */
+        $submit = new Form\Element\Submit();
+        $submit->input->setAttribute('class', 'btn primary');
+        $form->addItem($submit);
+        $request = Request::getInstance();
 
-		if (isset($request->lid) && 'insert' != $action) {
-			/** 更新模式 */
-			$db = Db::get();
-			$prefix = $db->getPrefix();
-			$link = $db->fetchRow($db->select()->from($prefix . 'links')->where('lid = ?', $request->lid));
-			if (!$link) {
-				throw new \Typecho\Widget\Exception(_t('链接不存在'), 404);
-			}
+        if (isset($request->lid) && 'insert' != $action) {
+            /** 更新模式 */
+            $db = Db::get();
+            $prefix = $db->getPrefix();
+            $link = $db->fetchRow($db->select()->from($prefix . 'links')->where('lid = ?', $request->lid));
+            if (!$link) {
+                throw new \Typecho\Widget\Exception(_t('链接不存在'), 404);
+            }
 
-			$name->value($link['name']);
-			$url->value($link['url']);
-			$sort->value($link['sort']);
-			$image->value($link['image']);
-			$description->value($link['description']);
-			$user->value($link['user']);
-			$do->value('update');
-			$lid->value($link['lid']);
-			$submit->value(_t('编辑链接'));
-			$_action = 'update';
-		} else {
-			$do->value('insert');
-			$submit->value(_t('增加链接'));
-			$_action = 'insert';
-		}
+            $name->value($link['name']);
+            $url->value($link['url']);
+            $sort->value($link['sort']);
+            $image->value($link['image']);
+            $description->value($link['description']);
+            $user->value($link['user']);
+            $do->value('update');
+            $lid->value($link['lid']);
+            $submit->value(_t('编辑链接'));
+            $_action = 'update';
+        } else {
+            $do->value('insert');
+            $submit->value(_t('增加链接'));
+            $_action = 'insert';
+        }
 
-		if (empty($action)) {
-			$action = $_action;
-		}
+        if (empty($action)) {
+            $action = $_action;
+        }
 
-		/** 给表单增加规则 */
-		if ('insert' == $action || 'update' == $action) {
-			$name->addRule('required', _t('必须填写链接名称'));
-			$url->addRule('required', _t('必须填写链接地址'));
-			$url->addRule('url', _t('不是一个合法的链接地址'));
-			$image->addRule('url', _t('不是一个合法的图片地址'));
-		}
-		if ('update' == $action) {
-			$lid->addRule('required', _t('链接主键不存在'));
-			$lid->addRule(['TypechoPlugin\Links\Plugin', 'LinkExists'], _t('链接不存在'));
-		}
-		return $form;
-	}
+        /** 给表单增加规则 */
+        if ('insert' == $action || 'update' == $action) {
+            $name->addRule('required', _t('必须填写链接名称'));
+            $url->addRule('required', _t('必须填写链接地址'));
+            $url->addRule('url', _t('不是一个合法的链接地址'));
+            $image->addRule('url', _t('不是一个合法的图片地址'));
+        }
+        if ('update' == $action) {
+            $lid->addRule('required', _t('链接主键不存在'));
+            $lid->addRule(['TypechoPlugin\Links\Plugin', 'LinkExists'], _t('链接不存在'));
+        }
+        return $form;
+    }
 
-	public static function LinkExists($lid)
-	{
-		$db = Db::get();
-		$prefix = $db->getPrefix();
-		$link = $db->fetchRow($db->select()->from($prefix . 'links')->where('lid = ?', $lid)->limit(1));
-		return $link ? true : false;
-	}
+    public static function LinkExists($lid)
+    {
+        $db = Db::get();
+        $prefix = $db->getPrefix();
+        $link = $db->fetchRow($db->select()->from($prefix . 'links')->where('lid = ?', $lid)->limit(1));
+        return $link ? true : false;
+    }
 
-	/**
-	 * 控制输出格式
-	 */
-	public static function output_str($pattern = NULL, $links_num = 0, $sort = NULL)
-	{
-		$options = Options::alloc();
-		if (!isset($options->plugins['activated']['Links'])) {
-			return '友情链接插件未激活';
-		}
-		if (!isset($pattern) || $pattern == "" || $pattern == NULL || $pattern == "SHOW_TEXT") {
-			$pattern = "<li><a href=\"{url}\" title=\"{title}\" target=\"_blank\" rel=\"noopener\">{name}</a></li>\n";
-		} else if ($pattern == "SHOW_IMG") {
-			$pattern = "<li><a href=\"{url}\" title=\"{title}\" target=\"_blank\" rel=\"noopener\"><img src=\"{image}\" alt=\"{name}\" /></a></li>\n";
-		} else if ($pattern == "SHOW_MIX") {
-			$pattern = "<li><a href=\"{url}\" title=\"{title}\" target=\"_blank\" rel=\"noopener\"><img src=\"{image}\" alt=\"{name}\" /><span>{name}</span></a></li>\n";
-		}
-		$db = Db::get();
-		$prefix = $db->getPrefix();
-		$options = Options::alloc();
-		$nopic_url = Common::url('/usr/plugins/Links/nopic.jpg', $options->siteUrl);
-		$sql = $db->select()->from($prefix . 'links');
-		if (!isset($sort) || $sort == "") {
-			$sort = NULL;
-		}
-		if ($sort) {
-			$sql = $sql->where('sort=?', $sort);
-		}
-		$sql = $sql->order($prefix . 'links.order', Db::SORT_ASC);
-		$links_num = intval($links_num);
-		if ($links_num > 0) {
-			$sql = $sql->limit($links_num);
-		}
-		$links = $db->fetchAll($sql);
-		$str = "";
-		foreach ($links as $link) {
-			if ($link['image'] == NULL) {
-				$link['image'] = $nopic_url;
-			}
-			$str .= str_replace(
-				['{lid}', '{name}', '{url}', '{sort}', '{title}', '{description}', '{image}', '{user}'],
-				[$link['lid'], $link['name'], $link['url'], $link['sort'], $link['description'], $link['description'], $link['image'], $link['user']],
-				$pattern
-			);
-		}
-		return $str;
-	}
+    /**
+     * 控制输出格式
+     */
+    public static function output_str($pattern = NULL, $links_num = 0, $sort = NULL)
+    {
+        $options = Options::alloc();
+        if (!isset($options->plugins['activated']['Links'])) {
+            return '友情链接插件未激活';
+        }
+        if (!isset($pattern) || $pattern == "" || $pattern == NULL || $pattern == "SHOW_TEXT") {
+            $pattern = "<li><a href=\"{url}\" title=\"{title}\" target=\"_blank\" rel=\"noopener\">{name}</a></li>\n";
+        } else if ($pattern == "SHOW_IMG") {
+            $pattern = "<li><a href=\"{url}\" title=\"{title}\" target=\"_blank\" rel=\"noopener\"><img src=\"{image}\" alt=\"{name}\" /></a></li>\n";
+        } else if ($pattern == "SHOW_MIX") {
+            $pattern = "<li><a href=\"{url}\" title=\"{title}\" target=\"_blank\" rel=\"noopener\"><img src=\"{image}\" alt=\"{name}\" /><span>{name}</span></a></li>\n";
+        }
+        $db = Db::get();
+        $prefix = $db->getPrefix();
+        $options = Options::alloc();
+        $nopic_url = Common::url('/usr/plugins/Links/nopic.jpg', $options->siteUrl);
+        $sql = $db->select()->from($prefix . 'links');
+        if (!isset($sort) || $sort == "") {
+            $sort = NULL;
+        }
+        if ($sort) {
+            $sql = $sql->where('sort=?', $sort);
+        }
+        $sql = $sql->order($prefix . 'links.order', Db::SORT_ASC);
+        $links_num = intval($links_num);
+        if ($links_num > 0) {
+            $sql = $sql->limit($links_num);
+        }
+        $links = $db->fetchAll($sql);
+        $str = "";
+        foreach ($links as $link) {
+            if ($link['image'] == NULL) {
+                $link['image'] = $nopic_url;
+            }
+            $str .= str_replace(
+                ['{lid}', '{name}', '{url}', '{sort}', '{title}', '{description}', '{image}', '{user}'],
+                [$link['lid'], $link['name'], $link['url'], $link['sort'], $link['description'], $link['description'], $link['image'], $link['user']],
+                $pattern
+            );
+        }
+        return $str;
+    }
 
-	//输出
-	public static function output($pattern = NULL, $links_num = 0, $sort = NULL)
-	{
-		echo self::output_str($pattern, $links_num, $sort);
-	}
+    //输出
+    public static function output($pattern = NULL, $links_num = 0, $sort = NULL)
+    {
+        echo self::output_str($pattern, $links_num, $sort);
+    }
 
-	/**
-	 * 解析
-	 * 
-	 * @access public
-	 * @param array $matches 解析值
-	 * @return string
-	 */
-	public static function parseCallback($matches)
-	{
-		$pattern = $matches[3];
-		$links_num = $matches[1];
-		$sort = $matches[2];
-		return self::output_str($pattern, $links_num, $sort);
-	}
+    /**
+     * 解析
+     *
+     * @access public
+     * @param array $matches 解析值
+     * @return string
+     */
+    public static function parseCallback($matches)
+    {
+        $pattern = $matches[3];
+        $links_num = $matches[1];
+        $sort = $matches[2];
+        return self::output_str($pattern, $links_num, $sort);
+    }
 
-	public static function parse($text, $widget, $lastResult)
-	{
-		$text = empty($lastResult) ? $text : $lastResult;
+    public static function parse($text, $widget, $lastResult)
+    {
+        $text = empty($lastResult) ? $text : $lastResult;
 
-		if ($widget instanceof \Widget\Archive || $widget instanceof Comments) {
-			return preg_replace_callback("/<links\s*(\d*)\s*(\w*)>\s*(.*?)\s*<\/links>/is", [__CLASS__, 'parseCallback'], $text);
-		} else {
-			return $text;
-		}
-	}
+        if ($widget instanceof \Widget\Archive || $widget instanceof Comments) {
+            return preg_replace_callback("/<links\s*(\d*)\s*(\w*)>\s*(.*?)\s*<\/links>/is", [__CLASS__, 'parseCallback'], $text);
+        } else {
+            return $text;
+        }
+    }
 }

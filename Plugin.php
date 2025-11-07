@@ -21,12 +21,12 @@ if (!defined('__TYPECHO_ROOT_DIR__')) {
  *
  * @package Links
  * @author Hanny
- * @version 1.1.1
+ * @version 1.2.0
  * @since 1.2.0
  * @link https://github.com/he0119/typecho-links
  *
  * 历史版本
- * version 1.2.0 at 2025-11-06
+ * version 1.2.0 at 2025-11-07
  * 适配 Typecho 1.2.0
  * 使用命名空间和新的类名
  *
